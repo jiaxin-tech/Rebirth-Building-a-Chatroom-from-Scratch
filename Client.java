@@ -1,9 +1,6 @@
 package com.chatroom;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -32,7 +29,10 @@ public class Client {
                 System.out.println("please input your username:");
                 username = sysin.readLine();
                 out.println(username);
+                String userlist = in.readLine();
+                System.out.println(userlist);
             }
+
             new Thread(this::receive).start();
              String userinput;
              while ((userinput = sysin.readLine()) != null) {
@@ -40,6 +40,20 @@ public class Client {
                      String outmsg="has been logged out";
                      out.println(outmsg);
                      break;
+                 }
+                 else if (userinput.equals("#chatlog")) {
+                     String logreader;
+                     try(BufferedReader reader=new BufferedReader(new FileReader("chatlog.txt"))){
+                         while((logreader=reader.readLine())!=null) {
+                             System.out.println(logreader);
+                     }
+                     } catch (IOException e) {
+                         throw new RuntimeException(e);
+                     }
+                 }
+                 else if (userinput.startsWith("#search")) {
+                     String keymsg=userinput.substring(7);
+                     chatsearch(keymsg);
                  }
                  else {
                      out.println(userinput);
@@ -56,17 +70,42 @@ public class Client {
         }
     }
 
-        public void receive ()  {
+
+    public void receive ()  {
             String msg;
             try{
                 while ((msg = in.readLine()) != null) {
                     System.out.println(msg);
+                    restore(msg);
                 }
             }catch (IOException e){
                 e.printStackTrace();
             }
 
         }
+
+    private void restore(String msg) {
+        try (PrintWriter restore = new PrintWriter(new FileWriter("chatlog.txt",true)))
+        { restore.println(msg);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+    private void chatsearch(String keymsg) {
+        try (BufferedReader chatsearch=new BufferedReader(new FileReader("chatlog.txt")))
+        {String line;
+            while((line=chatsearch.readLine())!=null) {
+                if (line.contains(keymsg)) {
+                    System.out.println(line);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 
 
 

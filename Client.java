@@ -30,72 +30,61 @@ public class Client {
                 username = sysin.readLine();
                 out.println(username);
                 String userlist = in.readLine();
-                System.out.println(userlist);
+                System.out.println("persons on line: "+userlist);
             }
 
             new Thread(this::receive).start();
-             String userinput;
-             while ((userinput = sysin.readLine()) != null) {
-                 if (userinput.equals("logout")) {
-                     String outmsg="has been logged out";
-                     out.println(outmsg);
-                     break;
-                 }
-                 else if (userinput.equals("#chatlog")) {
-                     String logreader;
-                     try(BufferedReader reader=new BufferedReader(new FileReader("chatlog.txt"))){
-                         while((logreader=reader.readLine())!=null) {
-                             System.out.println(logreader);
-                     }
-                     } catch (IOException e) {
-                         throw new RuntimeException(e);
-                     }
-                 }
-                 else if (userinput.startsWith("#search")) {
-                     String keymsg=userinput.substring(7);
-                     chatsearch(keymsg);
-                 }
-                 else {
-                     out.println(userinput);
-                 }
-             }
+            String userinput;
+            while ((userinput = sysin.readLine()) != null) {
+                if (userinput.equals("#chatlog")) {
+                    String logreader;
+                    try (BufferedReader reader = new BufferedReader(new FileReader("chatlog.txt"))) {
+                        while ((logreader = reader.readLine()) != null) {
+                            System.out.println(logreader);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if (userinput.startsWith("#search")) {
+                    String keymsg = userinput.substring(7);
+                    chatsearch(keymsg);
+                } else if (userinput.startsWith("[print-receivers]")) {
+                   read();
+                }
+                else {
+                    out.println(userinput);
+                }
+            }
 
 
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             socket.close();
             out.close();
             in.close();
         }
     }
 
-
-    public void receive ()  {
-            String msg;
-            try{
-                while ((msg = in.readLine()) != null) {
-                    System.out.println(msg);
-                    restore(msg);
-                }
-            }catch (IOException e){
-                e.printStackTrace();
+    /// basic function:receive message
+    public void receive() {
+        String msg;
+        try {
+            while ((msg = in.readLine()) != null) {
+                System.out.println(msg);
             }
-
-        }
-
-    private void restore(String msg) {
-        try (PrintWriter restore = new PrintWriter(new FileWriter("chatlog.txt",true)))
-        { restore.println(msg);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
     }
+
+
+    /// advanced function:search for history chatlog
     private void chatsearch(String keymsg) {
-        try (BufferedReader chatsearch=new BufferedReader(new FileReader("chatlog.txt")))
-        {String line;
-            while((line=chatsearch.readLine())!=null) {
+        try (BufferedReader chatsearch = new BufferedReader(new FileReader("chatlog.txt"))) {
+            String line;
+            while ((line = chatsearch.readLine()) != null) {
                 if (line.contains(keymsg)) {
                     System.out.println(line);
                 }
@@ -106,7 +95,16 @@ public class Client {
 
     }
 
-
-
+    /// advanced function:watch who had read last message,no matter if the use had left.
+    public void read(){
+        try (BufferedReader readreceivers = new BufferedReader(new FileReader("receivers.txt"))) {
+            String line;
+            while ((line = readreceivers.readLine()) != null) {
+                System.out.println("[receivers]: " + line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
